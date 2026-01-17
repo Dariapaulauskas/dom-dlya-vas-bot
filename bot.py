@@ -1,18 +1,19 @@
 import os
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
     ContextTypes,
     ConversationHandler,
-    filters
+    filters,
 )
+from flask import Flask, request
 
-# === НАСТРОЙКИ (замените своими данными) ===
-BOT_TOKEN = "8363188924:AAEhH0BG4T0IOBQkGwSdBMRqIXcQ3r5f7m0"
-ADMIN_CHAT_ID = 5864777393  # Ваш Telegram ID
+# === НАСТРОЙКИ ===
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID"))
 
 # Этапы диалога
 NAME, PURPOSE, BUILDING_TYPE, REGION, SIZE, OPTIONS, CUSTOM_DESC = range(7)
@@ -71,7 +72,7 @@ async def building_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📍 Где будет установка?\n(Например: Москва, Красногорск)")
     return REGION
 
-# Региオン
+# Регион
 async def region(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['region'] = update.message.text
     await update.message.reply_text("📐 Укажите желаемые размеры\n(Например: 5×4 м)")
@@ -175,7 +176,15 @@ def main():
     )
 
     application.add_handler(conv_handler)
-    application.run_polling()
+
+    # Запуск webhook
+    port = int(os.environ.get("PORT", 8000))
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path=BOT_TOKEN,
+        webhook_url=f"https://dom-dlya-vas-bot.onrender.com/{BOT_TOKEN}"
+    )
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
