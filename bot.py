@@ -157,6 +157,13 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Диалог завершён.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
+# Flask-сервер для Render
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "Bot is running", 200
+
 # Основная функция
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
