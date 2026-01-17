@@ -9,7 +9,6 @@ from telegram.ext import (
     ConversationHandler,
     filters,
 )
-from flask import Flask, request
 
 # === НАСТРОЙКИ ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -23,7 +22,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Здравствуйте!\n"
         "Это Помощник от компании «ДОМ ДЛЯ ВАС».\n\n"
-        "Чтобы подготовить для вас информацию по запросу, задам несколько вопросов:\n\n"
+        "Чтобы подготовить для Вас информацию по запросу, задам несколько вопросов:\n\n"
         "Ответьте на те пункты, которые уже понятны — остальное уточним по ходу 😊"
     )
     await update.message.reply_text("👤 Как к вам обращаться?")
@@ -39,10 +38,10 @@ async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         ["Нужен расчёт проекта"],
-        ["Задать вопрос / получить консультацию"]
+        ["Задать вопрос / Получить консультацию"]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    await update.message.reply_text("❓ Что вы хотите?", reply_markup=reply_markup)
+    await update.message.reply_text("❓ Что Вы хотите?", reply_markup=reply_markup)
     return PURPOSE
 
 # Цель
@@ -50,7 +49,7 @@ async def purpose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text
     context.user_data['purpose'] = choice
 
-    if "расчёт" in choice.lower():
+    if "Расчёт" in choice.lower():
         keyboard = [
             ["Дачный дом"],
             ["Хозблок / Бытовка"],
@@ -95,7 +94,7 @@ async def size(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def options(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['options'] = update.message.text
     if "Своё описание" in update.message.text:
-        await update.message.reply_text("Напишите ваш комментарий или пожелания")
+        await update.message.reply_text("Напишите Ваш комментарий или пожелания")
         return CUSTOM_DESC
     else:
         await send_summary(update, context)
@@ -143,11 +142,10 @@ async def send_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     client_msg = (
         f"✅ Спасибо, {name}!\n\n"
         f"Ваш запрос передан менеджеру.\n\n"
-        f"⏱️ В рабочее время (9:00–18:00 МСК) вы получите:\n"
+        f"⏱️ В рабочее время (9:00–18:00 МСК) Вы получите:\n"
         f"— информацию по проекту (если запрашивали расчёт);\n"
         f"— ответ на вопрос (если нужна консультация).\n\n"
         f"Все коммуникации проходят через этот чат.\n"
-        f"Если что-то срочное — напишите прямо здесь."
     )
     await update.message.reply_text(client_msg, reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
@@ -156,13 +154,6 @@ async def send_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Диалог завершён.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
-
-# Flask-сервер для Render
-app = Flask(__name__)
-
-@app.route('/')
-def health_check():
-    return "Bot is running", 200
 
 # Основная функция
 def main():
@@ -184,15 +175,12 @@ def main():
 
     application.add_handler(conv_handler)
 
-    # Запуск webhook
-    port = int(os.environ.get("PORT", 8000))
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=port,
-        url_path=BOT_TOKEN,
-        webhook_url=f"https://dom-dlya-vas-bot.onrender.com/{BOT_TOKEN}"
-    )
+    # Запуск polling (без webhook)
+    application.run_polling()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
+    logging.basicConfig(level=logging.INFO)
+    main()
+
